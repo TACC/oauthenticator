@@ -55,7 +55,7 @@ class AgaveOAuthenticator(OAuthenticator):
         )
 
         url = url_concat(
-            "https://{}/token".format(self.agave_base_url), params)
+            "https://{}/token".format(os.environ.get('AGAVE_BASE_URL'), params)
         self.log.info(url)
 
         bb_header = {"Content-Type":
@@ -78,7 +78,7 @@ class AgaveOAuthenticator(OAuthenticator):
                    "User-Agent": "JupyterHub",
                    "Authorization": "Bearer {}".format(access_token)
                    }
-        req = HTTPRequest("https://{}/profiles/v2/me".format(AGAVE_BASE_URL),
+        req = HTTPRequest("https://{}/profiles/v2/me".format(os.environ.get('AGAVE_BASE_URL')),
                           method="GET",
                           headers=headers
                           )
