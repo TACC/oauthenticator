@@ -19,8 +19,8 @@ from traitlets import Set
 from .oauth2 import OAuthLoginHandler, OAuthenticator
 
 class AgaveMixin(OAuth2Mixin):
-    _OAUTH_AUTHORIZE_URL = "https://{}/oauth2/authorize".format(self.agave_base_url)
-    _OAUTH_ACCESS_TOKEN_URL = "https://{}/token".format(self.agave_base_url)
+    _OAUTH_AUTHORIZE_URL = "https://{}/oauth2/authorize".format(AgaveOAuthenticator.agave_base_url)
+    _OAUTH_ACCESS_TOKEN_URL = "https://{}/token".format(AgaveOAuthenticator.agave_base_url)
 
 
 class AgaveLoginHandler(OAuthLoginHandler, AgaveMixin):
