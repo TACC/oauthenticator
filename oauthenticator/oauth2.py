@@ -38,7 +38,7 @@ class OAuthLoginHandler(BaseHandler):
         self.authorize_redirect(
             redirect_uri=redirect_uri,
             client_id=self.authenticator.client_id,
-            scope=[],
+            scope=['PRODUCTION'],
             response_type='code')
 
 
