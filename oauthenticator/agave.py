@@ -55,7 +55,7 @@ class AgaveOAuthenticator(OAuthenticator):
         )
 
         url = url_concat(
-            "https://{}/token".format(os.environ.get('AGAVE_BASE_URL'), params))
+            "https://{}/token".format(os.environ.get('AGAVE_BASE_URL')), params)
         self.log.info(url)
 
         bb_header = {"Content-Type":
