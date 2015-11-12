@@ -4,6 +4,7 @@ Custom Authenticator to use Agave OAuth with JupyterHub
 
 
 import json
+import os
 import urllib
 
 from tornado.auth import OAuth2Mixin
@@ -19,8 +20,8 @@ from traitlets import Set
 from .oauth2 import OAuthLoginHandler, OAuthenticator
 
 class AgaveMixin(OAuth2Mixin):
-    _OAUTH_AUTHORIZE_URL = "https://{}/oauth2/authorize".format(AgaveOAuthenticator.agave_base_url)
-    _OAUTH_ACCESS_TOKEN_URL = "https://{}/token".format(AgaveOAuthenticator.agave_base_url)
+    _OAUTH_AUTHORIZE_URL = "https://{}/oauth2/authorize".format(os.environ.get('AGAVE_BASE_URL'))
+    _OAUTH_ACCESS_TOKEN_URL = "https://{}/token".format(os.environ.get('AGAVE_BASE_URL'))
 
 
 class AgaveLoginHandler(OAuthLoginHandler, AgaveMixin):
