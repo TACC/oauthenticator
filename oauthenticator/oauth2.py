@@ -36,7 +36,7 @@ class OAuthLoginHandler(BaseHandler):
         self.log.info('oauth redirect: %r', redirect_uri)
         
         self.authorize_redirect(
-            callbackUrl=redirect_uri,
+            redirect_uri=redirect_uri,
             client_id=self.authenticator.client_id,
             scope=['PRODUCTION'],
             response_type='code')
