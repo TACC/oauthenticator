@@ -51,7 +51,9 @@ class AgaveOAuthenticator(OAuthenticator):
         params = dict(
             grant_type="authorization_code",
             code=code,
-            callbackUrl=self.oauth_callback_url,
+            redirect_uri=self.oauth_callback_url,
+            client_id=self.client_id,
+            client_secret=self.client_secret
         )
 
         url = url_concat(
@@ -62,8 +64,8 @@ class AgaveOAuthenticator(OAuthenticator):
                      "application/x-www-form-urlencoded;charset=utf-8"}
         req = HTTPRequest(url,
                           method="POST",
-                          auth_username=self.client_id,
-                          auth_password=self.client_secret,
+#                          auth_username=self.client_id,
+#                          auth_password=self.client_secret,
                           body=urllib.parse.urlencode(params).encode('utf-8'),
                           headers=bb_header
                           )
