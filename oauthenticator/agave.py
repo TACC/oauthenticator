@@ -51,11 +51,11 @@ class AgaveOAuthenticator(OAuthenticator):
         params = dict(
             grant_type="authorization_code",
             code=code,
-            callbackUrl=self.oauth_callback_url
+            callbackUrl=self.oauth_callback_url,
         )
 
         url = url_concat(
-            "https://{}/token".format(os.environ.get('AGAVE_BASE_URL')), params)
+            "https://{}/oauth2/token".format(os.environ.get('AGAVE_BASE_URL')), params)
         self.log.info(url)
 
         bb_header = {"Content-Type":
