@@ -74,6 +74,7 @@ class AgaveOAuthenticator(OAuthenticator):
         resp_json = json.loads(resp.body.decode('utf8', 'replace'))
 
         access_token = resp_json['access_token']
+        self.log.info(str(resp_json)) 
 
         # Determine who the logged in user is
         headers = {"Accept": "application/json",
