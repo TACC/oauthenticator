@@ -42,8 +42,6 @@ class AgaveOAuthenticator(OAuthenticator):
 
     @gen.coroutine
     def authenticate(self, handler):
-        self.log.info(str(handler))
-        self.log.info(handler.get_current_user_token())
         code = handler.get_argument("code", False)
         if not code:
             raise web.HTTPError(400, "oauth callback made without a token")
