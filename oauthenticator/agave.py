@@ -71,7 +71,7 @@ class AgaveOAuthenticator(OAuthenticator):
                           )
 
         resp = yield http_client.fetch(req)
-        resp_json = json.loads(resp.body.decode('utf8', 'replace'))
+        token = resp_json = json.loads(resp.body.decode('utf8', 'replace'))
 
         access_token = resp_json['access_token']
         self.log.info(str(resp_json)) 
@@ -91,7 +91,7 @@ class AgaveOAuthenticator(OAuthenticator):
         username = resp_json["result"]["username"]
 
         ensure_token_dir(username)
-        save_token(resp_json, username)
+        save_token(token, username)
 
         return username
 
