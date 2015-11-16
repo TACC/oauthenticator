@@ -106,7 +106,7 @@ def ensure_token_dir(username):
 
 
 def save_token(response, username):
-    with open(os.path.join('/tokens', username, token), 'w') as f:
+    with open(os.path.join('/tokens', username, 'token.json'), 'w') as f:
         json.dump(response, f)
 
 
