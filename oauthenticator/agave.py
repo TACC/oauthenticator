@@ -77,7 +77,7 @@ class AgaveOAuthenticator(OAuthenticator):
 
         access_token = resp_json['access_token']
         self.log.info(str(resp_json)) 
-
+        
         # Determine who the logged in user is
         headers = {"Accept": "application/json",
                    "User-Agent": "JupyterHub",
@@ -91,7 +91,23 @@ class AgaveOAuthenticator(OAuthenticator):
         resp_json = json.loads(resp.body.decode('utf8', 'replace'))
 
         username = resp_json["result"]["username"]
+
+        ensure_token_dir(username)
+        save_token(resp_json, username)
+
         return username
+
+
+def ensure_token_dir(username):
+    try:
+        os.makedirs(os.path.join('/tokens', username))
+    except OSError:
+        pass
+
+
+def save_token(response, username):
+    with open(os.path.join('/tokens', username, token), 'w') as f:
+        json.dump(response, f)
 
 
 class LocalAgaveOAuthenticator(LocalAuthenticator,
