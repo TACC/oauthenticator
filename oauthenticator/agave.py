@@ -90,8 +90,8 @@ class AgaveOAuthenticator(OAuthenticator):
 
         username = resp_json["result"]["username"]
 
-        ensure_token_dir(username)
-        save_token(token, username)
+        #ensure_token_dir(username)
+        #save_token(token, username)
 
         return username
 
