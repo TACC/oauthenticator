@@ -70,7 +70,7 @@ class AgaveOAuthenticator(OAuthenticator):
                           headers=bb_header
                           )
 
-        resp = yield http_client.fetch(req)
+        resp = yield http_client.fetch(req, validate_cert=eval(os.environ.get('OAUTH_VALIDATE_CERT', 'True')))
         token = resp_json = json.loads(resp.body.decode('utf8', 'replace'))
 
         access_token = resp_json['access_token']
@@ -85,7 +85,7 @@ class AgaveOAuthenticator(OAuthenticator):
                           method="GET",
                           headers=headers
                           )
-        resp = yield http_client.fetch(req)
+        resp = yield http_client.fetch(req, validate_cert=eval(os.environ.get('OAUTH_VALIDATE_CERT', 'True')))
         resp_json = json.loads(resp.body.decode('utf8', 'replace'))
 
         username = resp_json["result"]["username"]
