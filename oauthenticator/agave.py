@@ -64,6 +64,7 @@ class AgaveOAuthenticator(OAuthenticator):
                      "application/x-www-form-urlencoded;charset=utf-8"}
         req = HTTPRequest(url,
                           method="POST",
+                          validate_cert=eval(os.environ.get('OAUTH_VALIDATE_CERT', 'True')),
 #                          auth_username=self.client_id,
 #                          auth_password=self.client_secret,
                           body=urllib.parse.urlencode(params).encode('utf-8'),
@@ -82,6 +83,7 @@ class AgaveOAuthenticator(OAuthenticator):
                    "Authorization": "Bearer {}".format(access_token)
                    }
         req = HTTPRequest("https://{}/profiles/v2/me".format(os.environ.get('AGAVE_BASE_URL')),
+                          validate_cert=eval(os.environ.get('OAUTH_VALIDATE_CERT', 'True')),
                           method="GET",
                           headers=headers
                           )
