@@ -72,9 +72,10 @@ class AgaveOAuthenticator(OAuthenticator):
                           )
 
         resp = yield http_client.fetch(req, validate_cert=eval(os.environ.get('OAUTH_VALIDATE_CERT', 'True')))
-        token = resp_json = json.loads(resp.body.decode('utf8', 'replace'))
+        resp_json = json.loads(resp.body.decode('utf8', 'replace'))
 
         access_token = resp_json['access_token']
+        refresh_token = resp_json['refresh_token']
         self.log.info(str(resp_json)) 
         
         # Determine who the logged in user is
@@ -93,21 +94,30 @@ class AgaveOAuthenticator(OAuthenticator):
         username = resp_json["result"]["username"]
 
         ensure_token_dir(username)
-        save_token(token, username)
-
+        save_token(access_token, refresh_token, username)
         return username
 
 
 def ensure_token_dir(username):
+    tenant_id = os.environ.get('AGAVE_TENANT_ID')
     try:
-        os.makedirs(os.path.join('/tokens', username))
+        os.makedirs(os.path.join('/tokens', tenant_id, username))
     except OSError:
         pass
 
 
-def save_token(response, username):
-    with open(os.path.join('/tokens', username, 'token.json'), 'w') as f:
-        json.dump(response, f)
+def save_token(access_token, refresh_token, username):
+    tenant_id = os.environ.get('AGAVE_TENANT_ID')
+    d = {'token': access_token,
+         'refresh_token': refresh_token,
+         'tenant_id': tenant_id,
+         'api_key': os.environ.get('AGAVE_CLIENT_ID'),
+         'api_secret': os.environ.get('AGAVE_CLIENT_SECRET'),
+         'api_server': 'https://{}'.format(os.environ.get('AGAVE_BASE_URL')),
+         'verify': os.environ.get('OAUTH_VALIDATE_CERT'),
+         }
+    with open(os.path.join('/tokens', tenant_id, username, '.agpy'), 'w') as f:
+        json.dump(d, f)
 
 
 class LocalAgaveOAuthenticator(LocalAuthenticator,
