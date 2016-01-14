@@ -114,7 +114,7 @@ def save_token(access_token, refresh_token, username):
          'api_key': os.environ.get('AGAVE_CLIENT_ID'),
          'api_secret': os.environ.get('AGAVE_CLIENT_SECRET'),
          'api_server': 'https://{}'.format(os.environ.get('AGAVE_BASE_URL')),
-         'verify': os.environ.get('OAUTH_VALIDATE_CERT'),
+         'verify': eval(os.environ.get('OAUTH_VALIDATE_CERT', 'True')),
          }
     with open(os.path.join('/tokens', tenant_id, username, '.agpy'), 'w') as f:
         json.dump(d, f)
