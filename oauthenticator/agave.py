@@ -108,14 +108,14 @@ def ensure_token_dir(username):
 
 def save_token(access_token, refresh_token, username):
     tenant_id = os.environ.get('AGAVE_TENANT_ID')
-    d = {'token': access_token,
+    d = [{'token': access_token,
          'refresh_token': refresh_token,
          'tenant_id': tenant_id,
          'api_key': os.environ.get('AGAVE_CLIENT_ID'),
          'api_secret': os.environ.get('AGAVE_CLIENT_SECRET'),
          'api_server': 'https://{}'.format(os.environ.get('AGAVE_BASE_URL')),
          'verify': eval(os.environ.get('OAUTH_VALIDATE_CERT', 'True')),
-         }
+         }]
     with open(os.path.join('/tokens', tenant_id, username, '.agpy'), 'w') as f:
         json.dump(d, f)
 
