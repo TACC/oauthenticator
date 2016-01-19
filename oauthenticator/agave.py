@@ -6,6 +6,7 @@ Custom Authenticator to use Agave OAuth with JupyterHub
 import json
 import os
 import urllib
+import time
 
 from tornado.auth import OAuth2Mixin
 from tornado import gen, web
@@ -76,6 +77,13 @@ class AgaveOAuthenticator(OAuthenticator):
 
         access_token = resp_json['access_token']
         refresh_token = resp_json['refresh_token']
+        expires_in = resp_json['expires_in']
+        try:
+            expires_in = int(expires_in)
+        except ValueError:
+            expires_in = 3600
+        created_at = time.time()
+        expires_at = time.etime(created_at + expires_in)
         self.log.info(str(resp_json)) 
         
         # Determine who the logged in user is
@@ -94,7 +102,7 @@ class AgaveOAuthenticator(OAuthenticator):
         username = resp_json["result"]["username"]
 
         ensure_token_dir(username)
-        save_token(access_token, refresh_token, username)
+        save_token(access_token, refresh_token, username, created_at, expires_in, expires_at)
         return username
 
 
@@ -106,8 +114,9 @@ def ensure_token_dir(username):
         pass
 
 
-def save_token(access_token, refresh_token, username):
+def save_token(access_token, refresh_token, username, created_at, expires_in, expires_at):
     tenant_id = os.environ.get('AGAVE_TENANT_ID')
+    # agavepy file
     d = [{'token': access_token,
          'refresh_token': refresh_token,
          'tenant_id': tenant_id,
@@ -117,6 +126,20 @@ def save_token(access_token, refresh_token, username):
          'verify': eval(os.environ.get('OAUTH_VALIDATE_CERT', 'True')),
          }]
     with open(os.path.join('/tokens', tenant_id, username, '.agpy'), 'w') as f:
+        json.dump(d, f)
+    # cli file
+    d = {'tenant_id': tenant_id,
+         'baseurl': 'https://{}'.format(os.environ.get('AGAVE_BASE_URL')),
+         'devurl': '',
+         'apikey': os.environ.get('AGAVE_CLIENT_ID'),
+         'username': username,
+         'access_token': access_token,
+         'refresh_token': refresh_token,
+         'created_at': created_at,
+         'expires_in': expires_in,
+         'expires_at': expires_at
+         }
+    with open(os.path.join('/tokens', tenant_id, username, 'current'), 'w') as f:
         json.dump(d, f)
 
 
