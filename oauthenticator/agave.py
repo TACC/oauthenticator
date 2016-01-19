@@ -83,7 +83,7 @@ class AgaveOAuthenticator(OAuthenticator):
         except ValueError:
             expires_in = 3600
         created_at = time.time()
-        expires_at = time.etime(created_at + expires_in)
+        expires_at = time.ctime(created_at + expires_in)
         self.log.info(str(resp_json)) 
         
         # Determine who the logged in user is
