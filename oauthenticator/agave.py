@@ -31,7 +31,8 @@ class AgaveLoginHandler(OAuthLoginHandler, AgaveMixin):
 
 class AgaveOAuthenticator(OAuthenticator):
 
-    login_service = "Agave {} tenant".format(os.environ.get('AGAVE_TENANT_NAME'))
+    login_service = os.environ.get('AGAVE_LOGIN_BUTTON_TEXT')
+    # login_service = "Agave {} tenant".format(os.environ.get('AGAVE_TENANT_NAME'))
     client_id_env = 'AGAVE_CLIENT_ID'
     client_secret_env = 'AGAVE_CLIENT_SECRET'
     login_handler = AgaveLoginHandler
