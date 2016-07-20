@@ -2,9 +2,11 @@
 Custom Authenticator to use Agave OAuth with JupyterHub
 """
 
-
+import grp
 import json
 import os
+import pwd
+import sys
 import urllib
 import time
 
@@ -142,6 +144,21 @@ def save_token(access_token, refresh_token, username, created_at, expires_in, ex
          }
     with open(os.path.join('/tokens', tenant_id, username, 'current'), 'w') as f:
         json.dump(d, f)
+    # look up uid and gid of apim home dir. If this path doesn't exist, stat_info will contain the root user and group
+    # (that is, uid = 0 = gid).
+    stat_info = os.stat('/home/apim')
+    uid = stat_info.st_uid
+    gid = stat_info.st_gid
+    # try to set the ownership of the cache files to the apim user and an appropriate group. We need to ignore
+    # permission errors for portability.
+    try:
+        os.chown(os.path.join('/tokens', tenant_id, username, '.agpy'), uid, gid)
+        os.chown(os.path.join('/tokens', tenant_id, username, 'current'), uid, gid)
+    # if we get a permission error, ignore it because we may be in a different enviornment without an apim user and
+    # thus trying to set ownership to root.
+    except OSError:
+        print("Unable to set permissions on cache files", file=sys.stdout)
+        pass
 
 
 class LocalAgaveOAuthenticator(LocalAuthenticator,
