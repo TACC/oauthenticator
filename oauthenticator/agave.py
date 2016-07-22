@@ -146,7 +146,7 @@ def save_token(access_token, refresh_token, username, created_at, expires_in, ex
         json.dump(d, f)
     # look up uid and gid of apim home dir. If this path doesn't exist, stat_info will contain the root user and group
     # (that is, uid = 0 = gid).
-    stat_info = os.stat('/home/apim')
+    stat_info = os.stat('/tokens')
     uid = stat_info.st_uid
     gid = stat_info.st_gid
     # try to set the ownership of the cache files to the apim user and an appropriate group. We need to ignore
