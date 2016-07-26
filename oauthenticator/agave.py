@@ -121,6 +121,9 @@ def ensure_data_dir(username):
     tenant_id = os.environ.get('AGAVE_TENANT_ID')
     try:
         os.makedirs(os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username))
+    except FileExistsError:
+        pass
+    try:
         uid, gid = get_uid_gid()
         os.chown(os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username), uid, gid)
     except OSError:
