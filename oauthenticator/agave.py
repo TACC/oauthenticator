@@ -105,6 +105,7 @@ class AgaveOAuthenticator(OAuthenticator):
         username = resp_json["result"]["username"]
 
         ensure_token_dir(username)
+        ensure_data_dir(username)
         save_token(access_token, refresh_token, username, created_at, expires_in, expires_at)
         return username
 
@@ -116,6 +117,23 @@ def ensure_token_dir(username):
     except OSError:
         pass
 
+def ensure_data_dir(username):
+    tenant_id = os.environ.get('AGAVE_TENANT_ID')
+    try:
+        os.makedirs(os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username))
+        uid, gid = get_uid_gid()
+        os.chown(os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username), uid, gid)
+    except OSError:
+        pass
+
+def get_uid_gid():
+    """look up uid and gid of apim home dir. If this path doesn't exist, stat_info will contain the root user and group
+    (that is, uid = 0 = gid)."""
+
+    stat_info = os.stat('/tokens')
+    uid = stat_info.st_uid
+    gid = stat_info.st_gid
+    return uid, gid
 
 def save_token(access_token, refresh_token, username, created_at, expires_in, expires_at):
     tenant_id = os.environ.get('AGAVE_TENANT_ID')
@@ -144,14 +162,10 @@ def save_token(access_token, refresh_token, username, created_at, expires_in, ex
          }
     with open(os.path.join('/tokens', tenant_id, username, 'current'), 'w') as f:
         json.dump(d, f)
-    # look up uid and gid of apim home dir. If this path doesn't exist, stat_info will contain the root user and group
-    # (that is, uid = 0 = gid).
-    stat_info = os.stat('/tokens')
-    uid = stat_info.st_uid
-    gid = stat_info.st_gid
     # try to set the ownership of the cache files to the apim user and an appropriate group. We need to ignore
     # permission errors for portability.
     try:
+        uid, gid = get_uid_gid()
         os.chown(os.path.join('/tokens', tenant_id, username, '.agpy'), uid, gid)
         os.chown(os.path.join('/tokens', tenant_id, username, 'current'), uid, gid)
     # if we get a permission error, ignore it because we may be in a different enviornment without an apim user and
