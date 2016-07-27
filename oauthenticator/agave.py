@@ -104,79 +104,83 @@ class AgaveOAuthenticator(OAuthenticator):
 
         username = resp_json["result"]["username"]
 
-        ensure_token_dir(username)
-        ensure_data_dir(username)
-        save_token(access_token, refresh_token, username, created_at, expires_in, expires_at)
+        self.ensure_token_dir(username)
+        self.ensure_data_dir(username)
+        self.save_token(access_token, refresh_token, username, created_at, expires_in, expires_at)
         return username
 
+    def ensure_token_dir(self, username):
+        tenant_id = os.environ.get('AGAVE_TENANT_ID')
+        try:
+            os.makedirs(os.path.join('/tokens', tenant_id, username))
+        except OSError as e:
+            self.log.info("Got error trying to make token dir: {}".format(e))
 
-def ensure_token_dir(username):
-    tenant_id = os.environ.get('AGAVE_TENANT_ID')
-    try:
-        os.makedirs(os.path.join('/tokens', tenant_id, username))
-    except OSError:
-        pass
+    def ensure_data_dir(self, username):
+        tenant_id = os.environ.get('AGAVE_TENANT_ID')
+        try:
+            os.makedirs(os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username))
+        except FileExistsError as e:
+            self.log.info("Got FileExists error trying to make user's data dir: {}".format(e))
+            pass
+        try:
+            uid, gid = self.get_uid_gid()
+            user_path = os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username)
+            os.chown(user_path, uid, gid)
+            self.log.info('set ownership permissions for: {} to uid: {} and gid: {}'.format(user_path, uid, gid))
+        except OSError as e:
+            self.log.info("OSError setting permissions on userdata dirs: {}".format(e))
+        except PermissionError as e:
+            self.log.info("PermissionError setting permissions on userdata dirs: {}".format(e))
 
-def ensure_data_dir(username):
-    tenant_id = os.environ.get('AGAVE_TENANT_ID')
-    try:
-        os.makedirs(os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username))
-    except FileExistsError:
-        pass
-    try:
-        uid, gid = get_uid_gid()
-        os.chown(os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username), uid, gid)
-    except OSError:
-        pass
+    def get_uid_gid(self):
+        """look up uid and gid of apim home dir. If this path doesn't exist, stat_info will contain the root user and group
+        (that is, uid = 0 = gid)."""
 
-def get_uid_gid():
-    """look up uid and gid of apim home dir. If this path doesn't exist, stat_info will contain the root user and group
-    (that is, uid = 0 = gid)."""
+        stat_info = os.stat('/home/apim/jupyterhub_config.py')
+        uid = stat_info.st_uid
+        gid = stat_info.st_gid
+        return uid, gid
 
-    stat_info = os.stat('/tokens')
-    uid = stat_info.st_uid
-    gid = stat_info.st_gid
-    return uid, gid
-
-def save_token(access_token, refresh_token, username, created_at, expires_in, expires_at):
-    tenant_id = os.environ.get('AGAVE_TENANT_ID')
-    # agavepy file
-    d = [{'token': access_token,
-         'refresh_token': refresh_token,
-         'tenant_id': tenant_id,
-         'api_key': os.environ.get('AGAVE_CLIENT_ID'),
-         'api_secret': os.environ.get('AGAVE_CLIENT_SECRET'),
-         'api_server': 'https://{}'.format(os.environ.get('AGAVE_BASE_URL')),
-         'verify': eval(os.environ.get('OAUTH_VALIDATE_CERT', 'True')),
-         }]
-    with open(os.path.join('/tokens', tenant_id, username, '.agpy'), 'w') as f:
-        json.dump(d, f)
-    # cli file
-    d = {'tenant_id': tenant_id,
-         'baseurl': 'https://{}'.format(os.environ.get('AGAVE_BASE_URL')),
-         'devurl': '',
-         'apikey': os.environ.get('AGAVE_CLIENT_ID'),
-         'username': username,
-         'access_token': access_token,
-         'refresh_token': refresh_token,
-         'created_at': created_at,
-         'expires_in': expires_in,
-         'expires_at': expires_at
-         }
-    with open(os.path.join('/tokens', tenant_id, username, 'current'), 'w') as f:
-        json.dump(d, f)
-    # try to set the ownership of the cache files to the apim user and an appropriate group. We need to ignore
-    # permission errors for portability.
-    try:
-        uid, gid = get_uid_gid()
-        os.chown(os.path.join('/tokens', tenant_id, username, '.agpy'), uid, gid)
-        os.chown(os.path.join('/tokens', tenant_id, username, 'current'), uid, gid)
-    # if we get a permission error, ignore it because we may be in a different enviornment without an apim user and
-    # thus trying to set ownership to root.
-    except OSError:
-        print("Unable to set permissions on cache files", file=sys.stdout)
-        pass
-
+    def save_token(self, access_token, refresh_token, username, created_at, expires_in, expires_at):
+        tenant_id = os.environ.get('AGAVE_TENANT_ID')
+        # agavepy file
+        d = [{'token': access_token,
+             'refresh_token': refresh_token,
+             'tenant_id': tenant_id,
+             'api_key': os.environ.get('AGAVE_CLIENT_ID'),
+             'api_secret': os.environ.get('AGAVE_CLIENT_SECRET'),
+             'api_server': 'https://{}'.format(os.environ.get('AGAVE_BASE_URL')),
+             'verify': eval(os.environ.get('OAUTH_VALIDATE_CERT', 'True')),
+             }]
+        with open(os.path.join('/tokens', tenant_id, username, '.agpy'), 'w') as f:
+            json.dump(d, f)
+        # cli file
+        d = {'tenant_id': tenant_id,
+             'baseurl': 'https://{}'.format(os.environ.get('AGAVE_BASE_URL')),
+             'devurl': '',
+             'apikey': os.environ.get('AGAVE_CLIENT_ID'),
+             'username': username,
+             'access_token': access_token,
+             'refresh_token': refresh_token,
+             'created_at': created_at,
+             'expires_in': expires_in,
+             'expires_at': expires_at
+             }
+        with open(os.path.join('/tokens', tenant_id, username, 'current'), 'w') as f:
+            json.dump(d, f)
+        # try to set the ownership of the cache files to the apim user and an appropriate group. We need to ignore
+        # permission errors for portability.
+        try:
+            uid, gid = self.get_uid_gid()
+            os.chown(os.path.join('/tokens', tenant_id, username, '.agpy'), uid, gid)
+            os.chown(os.path.join('/tokens', tenant_id, username, 'current'), uid, gid)
+        # if we get a permission error, ignore it because we may be in a different enviornment without an apim user and
+        # thus trying to set ownership to root.
+        except OSError as e:
+            self.log.info("OSError setting permissions on cache files: {}".format(e))
+        except PermissionError as e:
+            self.log.info("PermissionError setting permissions on cache files: {}".format(e))
 
 class LocalAgaveOAuthenticator(LocalAuthenticator,
                                    AgaveOAuthenticator):
