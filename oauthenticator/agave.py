@@ -156,16 +156,17 @@ class AgaveOAuthenticator(OAuthenticator):
         with open(os.path.join('/tokens', tenant_id, username, '.agpy'), 'w') as f:
             json.dump(d, f)
         # cli file
-        d = {'tenant_id': tenant_id,
+        d = {'tenantid': tenant_id,
              'baseurl': 'https://{}'.format(os.environ.get('AGAVE_BASE_URL')),
              'devurl': '',
              'apikey': os.environ.get('AGAVE_CLIENT_ID'),
              'username': username,
              'access_token': access_token,
              'refresh_token': refresh_token,
-             'created_at': created_at,
-             'expires_in': expires_in,
-             'expires_at': expires_at
+             'created_at': str(int(created_at)),
+             'api_secret': os.environ.get('AGAVE_CLIENT_SECRET'),
+             'expires_in': str(expires_in),
+             'expires_at': str(expires_at)
              }
         with open(os.path.join('/tokens', tenant_id, username, 'current'), 'w') as f:
             json.dump(d, f)
