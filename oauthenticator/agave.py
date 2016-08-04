@@ -155,6 +155,8 @@ class AgaveOAuthenticator(OAuthenticator):
              }]
         with open(os.path.join('/tokens', tenant_id, username, '.agpy'), 'w') as f:
             json.dump(d, f)
+        self.log.info("Saved agavepy cache file to {}".format(os.path.join('/tokens', tenant_id, username, '.agpy')))
+        self.log.info("agavepy cache file data: {}".format(d))
         # cli file
         d = {'tenantid': tenant_id,
              'baseurl': 'https://{}'.format(os.environ.get('AGAVE_BASE_URL')),
@@ -170,6 +172,8 @@ class AgaveOAuthenticator(OAuthenticator):
              }
         with open(os.path.join('/tokens', tenant_id, username, 'current'), 'w') as f:
             json.dump(d, f)
+        self.log.info("Saved CLI cache file to {}".format(os.path.join('/tokens', tenant_id, username, 'current')))
+        self.log.info("CLI cache file data: {}".format(d))
         # try to set the ownership of the cache files to the apim user and an appropriate group. We need to ignore
         # permission errors for portability.
         try:
