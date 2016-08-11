@@ -166,7 +166,7 @@ class AgaveOAuthenticator(OAuthenticator):
              'access_token': access_token,
              'refresh_token': refresh_token,
              'created_at': str(int(created_at)),
-             'api_secret': os.environ.get('AGAVE_CLIENT_SECRET'),
+             'apisecret': os.environ.get('AGAVE_CLIENT_SECRET'),
              'expires_in': str(expires_in),
              'expires_at': str(expires_at)
              }
