@@ -136,10 +136,23 @@ class AgaveOAuthenticator(OAuthenticator):
     def get_uid_gid(self):
         """look up uid and gid of apim home dir. If this path doesn't exist, stat_info will contain the root user and group
         (that is, uid = 0 = gid)."""
-
+        # first, see if they are defined in the environment
+        uid = os.environ.get('jupyteruser_uid')
+        gid = os.environ.get('jupyteruser_gid')
+        if uid and gid:
+            self.log.info('Tenant set custom UID and GID for jupyteruser. UID: {} GID: {}'.format(uid, gid))
+            try:
+                uid = int(uid)
+                gid = int(gid)
+                self.log.info('Cast to int and returning UID: {}, GID:{}'.format(uid, gid))
+                return uid, gid
+            except Exception as e:
+                self.log.info("Got exception {} casting to int".format(e))
+        # otherwise, try to derive them from existing file ownerships
         stat_info = os.stat('/home/apim/jupyterhub_config.py')
         uid = stat_info.st_uid
         gid = stat_info.st_gid
+        self.log.info("Used the /home/apim/jupyterhub_config.py file to determine UID: {}, GID:{}".format(uid, gid))
         return uid, gid
 
     def save_token(self, access_token, refresh_token, username, created_at, expires_in, expires_at):
