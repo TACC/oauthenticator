@@ -118,16 +118,20 @@ class AgaveOAuthenticator(OAuthenticator):
 
     def ensure_data_dir(self, username):
         tenant_id = os.environ.get('AGAVE_TENANT_ID')
+        data_dir = os.environ.get('AGAVE_USER_DATA_DIR_BASE_PATH')
+        if data_dir:
+            data_dir = os.path.join(data_dir, username)
+        else:
+            data_dir = os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username)
         try:
-            os.makedirs(os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username))
+            os.makedirs(data_dir)
         except FileExistsError as e:
             self.log.info("Got FileExists error trying to make user's data dir: {}".format(e))
             pass
         try:
             uid, gid = self.get_uid_gid()
-            user_path = os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username)
-            os.chown(user_path, uid, gid)
-            self.log.info('set ownership permissions for: {} to uid: {} and gid: {}'.format(user_path, uid, gid))
+            os.chown(data_dir, uid, gid)
+            self.log.info('set ownership permissions for: {} to uid: {} and gid: {}'.format(data_dir, uid, gid))
         except OSError as e:
             self.log.info("OSError setting permissions on userdata dirs: {}".format(e))
         except PermissionError as e:
