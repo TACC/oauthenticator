@@ -120,22 +120,34 @@ class AgaveOAuthenticator(OAuthenticator):
         tenant_id = os.environ.get('AGAVE_TENANT_ID')
         data_dir = os.environ.get('AGAVE_USER_DATA_DIR_BASE_PATH')
         if data_dir:
+            # this is a hack for the public tenant.
             data_dir = os.path.join(data_dir, username)
+            # run the homegen container to create the user dir using the nfs user account. this will break if other tenants use the AGAVE_USER_DATA_DIR env.
+            import docker
+            cli = docker.AutoVersionClient('unix://var/run/docker.sock')
+            volumes = ['/corral-repl']
+            binds = {'/corral-repl': {'bind': '/corral-repl', 'ro': False}}
+            host_config = cli.create_host_config(binds=binds)
+            container = cli.create_container(image='agaveapi/homegen',
+                                             volumes=volumes,
+                                             host_config=host_config,
+                                             command='mkdir -p {}'.format(data_dir))
+            cli.start(container=container.get('Id'))
         else:
             data_dir = os.path.join('/home/apim/jupyterhub_userdata', tenant_id, username)
-        try:
-            os.makedirs(data_dir)
-        except FileExistsError as e:
-            self.log.info("Got FileExists error trying to make user's data dir: {}".format(e))
-            pass
-        try:
-            uid, gid = self.get_uid_gid()
-            os.chown(data_dir, uid, gid)
-            self.log.info('set ownership permissions for: {} to uid: {} and gid: {}'.format(data_dir, uid, gid))
-        except OSError as e:
-            self.log.info("OSError setting permissions on userdata dirs: {}".format(e))
-        except PermissionError as e:
-            self.log.info("PermissionError setting permissions on userdata dirs: {}".format(e))
+            try:
+                os.makedirs(data_dir)
+            except FileExistsError as e:
+                self.log.info("Got FileExists error trying to make user's data dir: {}".format(e))
+                pass
+            try:
+                uid, gid = self.get_uid_gid()
+                os.chown(data_dir, uid, gid)
+                self.log.info('set ownership permissions for: {} to uid: {} and gid: {}'.format(data_dir, uid, gid))
+            except OSError as e:
+                self.log.info("OSError setting permissions on userdata dirs: {}".format(e))
+            except PermissionError as e:
+                self.log.info("PermissionError setting permissions on userdata dirs: {}".format(e))
 
     def get_uid_gid(self):
         """look up uid and gid of apim home dir. If this path doesn't exist, stat_info will contain the root user and group
